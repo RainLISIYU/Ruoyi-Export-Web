@@ -30,7 +30,7 @@
             type="primary"
             plain
             icon="Plus"
-            @click="() => {open = true}"
+            @click="openAdd"
         >新增</el-button>
       </el-col>
     </el-row>
@@ -43,7 +43,7 @@
       <el-table-column label="工作流名称" allign="center" prop="name" />
       <el-table-column label="工作流文件" align="center" prop="file">
         <template #default="scope">
-          {{ scope.row.file }}
+          {{ scope.row.fileName }}
         </template>
       </el-table-column>
       <el-table-column label="是否部署" align="center" prop="needDeploy" >
@@ -53,8 +53,9 @@
       </el-table-column>
       <el-table-column label="操作" align="center">
         <template #default="scope">
-          <el-button size="small">部署</el-button>
-          <el-button size="small">部署</el-button>
+          <el-button size="small" type="primary" @click="initEdit(scope.row)">编辑</el-button>
+          <el-button size="small" type="primary">部署</el-button>
+          <el-button size="small" type="danger" @click="deleteFlow(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -67,48 +68,21 @@
         @pafination="getList"
     />
 
-    <el-dialog v-model="open" :title="title" width="600px" append-to-body>
-      <el-form :model="form" :rules="rules" ref="workflowRef" label-width="80px">
-        <el-row>
-          <el-col :span="24">
-            <el-form-item label="工作流名称" label-width="100px" prop="name">
-              <el-input v-model="form.name" placeholder="请输入工作流名称" maxlength="30" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="工作流文件" label-width="100px" prop="filef">
-              <el-upload
-                  ref="uploadRef"
-                  :limit="1"
-                  :headers="upload.headers"
-                  :action="upload.url"
-                  :disabled="upload.isUploading"
-                  :on-progress="handleFileUploadProgress"
-                  :on-success="handleFileSuccess"
-                  :on-error="handleFileError"
-                  :auto-upload="false"
-                  drag
-              >
-                <template #trigger>
-                  <el-button size="small" type="primary">选取文件</el-button>
-                </template>
-                <el-button style="margin-left: 10px;" size="small" type="success" :loading="upload.isUploading" @click="submitUpload">上传到服务器</el-button>
-              </el-upload>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </el-dialog>
+    <Save ref="save" v-model:form="form" :getList="getList"/>
+
   </div>
 </template>
 
 <script setup name="work">
 
-import { getWorkflow } from "@/api/work/config.js";
+import { getWorkflow, saveWorkFlow, deleteWorkFlow } from "@/api/work/config.js";
 import Pagination from "@/components/Pagination/index.vue";
 import { getToken } from "@/utils/auth.js";
+import Save from './components/save.vue'
 
 const { proxy } = getCurrentInstance()
+
+const save = ref('save')
 
 /** 查询参数 */
 const queryParams = ref({
@@ -126,14 +100,17 @@ const open = ref(false)
 
 /** 添加弹框 */
 const title = ref("添加")
-const form = ref({
-  name: "",
-  filePath: "",
-  fileId: ""
+const form = reactive({
+  name: '',
+  fileName: '',
+  filePath: '',
+  fileId: '',
+  fileList: [],
+  imgName: '',
+  imgPath: '',
+  imgId: '',
+  imgList: [],
 })
-const rules = {
-  name: [{ required: true, message: "请输入工作流名称", trigger: "blur" }]
-}
 
 /** 文件上传 */
 const upload = reactive({
@@ -144,54 +121,34 @@ const upload = reactive({
   url: import.meta.env.VITE_APP_BASE_API + "/file/upload"
 })
 
-/**文件上传中处理 */
-const handleFileUploadProgress = (event, file, fileList) => {
-  upload.isUploading = true;
-};
-
-/** 文件上传成功处理 */
-const handleFileSuccess = (response, file, fileList) => {
-  upload.isUploading = false;
-  console.log(response)
-  if (response.code === 500) {
-    proxy.$message.error("上传失败");
-  } else {
-    form.value.filePath = response.url;
-    form.value.fileId = response.id;
-  }
-};
-
-/** 文件上传失败处理 */
-const handleFileError = (err, file, fileList) => {
-  upload.isUploading = false;
-  proxy.$message.error("上传失败");
-};
-
-/**文件上城 */
-function submitUpload() {
-  proxy.$refs["uploadRef"].submit();
+// 初始化新增弹框
+const openAdd = () => {
+  save.value.openAdd()
+}
+// 编辑
+const initEdit = (data) => {
+  save.value.initEdit(data)
 }
 
-// Promise测试
-const gen = (time) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(function (){
-      if (time < 500) {
-        resolve(time);
-      } else {
-        reject(time)
-      }
-    }, time)
+// 删除
+const deleteFlow = (data) => {
+  proxy.$modal.confirm("是否删除该工作流？").then(() => {
+    let ids = ref([])
+    ids.value.push(data.id)
+    return deleteWorkFlow(ids.value)
+  }).then(res => {
+    if (res.code === 200) {
+      proxy.$message.success(res.msg);
+    } else {
+      proxy.$message.error(res.msg);
+    }
+    getList()
   })
 }
 
 // 查询
 function getList() {
   loading.value = true;
-  gen(Math.random() * 1000)
-      .then(val => {console.log("resolve", val)})
-      .catch(val => {console.log("reject", val)})
-      .finally(() => {console.log("finally")})
   getWorkflow(queryParams.value).then(res => {
     workList.value = res.rows;
     total.value = res.total;

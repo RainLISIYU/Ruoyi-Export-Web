@@ -2,6 +2,7 @@
   <div class="upload-file">
     <el-upload
       multiple
+      v-if="fileList.length < limit"
       :action="uploadFileUrl"
       :before-upload="handleBeforeUpload"
       :file-list="fileList"
@@ -18,7 +19,7 @@
       <el-button type="primary">选取文件</el-button>
     </el-upload>
     <!-- 上传提示 -->
-    <div class="el-upload__tip" v-if="showTip">
+    <div class="el-upload__tip" v-if="showTip && fileList.length < limit">
       请上传
       <template v-if="fileSize"> 大小不超过 <b style="color: #f56c6c">{{ fileSize }}MB</b> </template>
       <template v-if="fileType"> 格式为 <b style="color: #f56c6c">{{ fileType.join("/") }}</b> </template>
@@ -27,7 +28,7 @@
     <!-- 文件列表 -->
     <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear" tag="ul">
       <li :key="file.uid" class="el-upload-list__item ele-upload-list__item-content" v-for="(file, index) in fileList">
-        <el-link :href="`${baseUrl}${file.url}`" :underline="false" target="_blank">
+        <el-link :href="`${fileUrl}${file.url}`" :underline="false" target="_blank">
           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
         </el-link>
         <div class="ele-upload-list__item-content-action">
@@ -69,8 +70,9 @@ const { proxy } = getCurrentInstance();
 const emit = defineEmits();
 const number = ref(0);
 const uploadList = ref([]);
+const fileUrl = import.meta.env.VITE_APP_FILE_API;
 const baseUrl = import.meta.env.VITE_APP_BASE_API;
-const uploadFileUrl = ref(import.meta.env.VITE_APP_BASE_API + "/common/upload"); // 上传文件服务器地址
+const uploadFileUrl = ref(import.meta.env.VITE_APP_BASE_API + "/file/upload"); // 上传文件服务器地址
 const headers = ref({ Authorization: "Bearer " + getToken() });
 const fileList = ref([]);
 const showTip = computed(
@@ -134,7 +136,7 @@ function handleUploadError(err) {
 // 上传成功回调
 function handleUploadSuccess(res, file) {
   if (res.code === 200) {
-    uploadList.value.push({ name: res.fileName, url: res.fileName });
+    uploadList.value.push({ name: res.data.name, url: res.data.url, id: res.data.id});
     uploadedSuccessfully();
   } else {
     number.value--;
@@ -148,7 +150,7 @@ function handleUploadSuccess(res, file) {
 // 删除文件
 function handleDelete(index) {
   fileList.value.splice(index, 1);
-  emit("update:modelValue", listToString(fileList.value));
+  emit("update:modelValue", fileList.value);
 }
 
 // 上传结束处理
@@ -157,7 +159,7 @@ function uploadedSuccessfully() {
     fileList.value = fileList.value.filter(f => f.url !== undefined).concat(uploadList.value);
     uploadList.value = [];
     number.value = 0;
-    emit("update:modelValue", listToString(fileList.value));
+    emit("update:modelValue", fileList.value);
     proxy.$modal.closeLoading();
   }
 }
@@ -165,7 +167,7 @@ function uploadedSuccessfully() {
 // 获取文件名称
 function getFileName(name) {
   // 如果是url那么取最后的名字 如果不是直接返回
-  if (name.lastIndexOf("/") > -1) {
+  if (name?.lastIndexOf("/") > -1) {
     return name.slice(name.lastIndexOf("/") + 1);
   } else {
     return name;
@@ -181,7 +183,7 @@ function listToString(list, separator) {
       strs += list[i].url + separator;
     }
   }
-  return strs != '' ? strs.substr(0, strs.length - 1) : '';
+  return strs != '' ? strs.substring(0, strs.length - 1) : '';
 }
 </script>
 
@@ -194,6 +196,7 @@ function listToString(list, separator) {
   line-height: 2;
   margin-bottom: 10px;
   position: relative;
+  transition: none;
 }
 .upload-file-list .ele-upload-list__item-content {
   display: flex;
