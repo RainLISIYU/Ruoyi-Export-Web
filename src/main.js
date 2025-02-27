@@ -44,6 +44,10 @@ import TreeSelect from '@/components/TreeSelect'
 // 字典标签组件
 import DictTag from '@/components/DictTag'
 
+// 数学公式
+import '@/utils/mathjax.js'
+import 'mathjax/es5/tex-svg.js'
+
 const app = createApp(App)
 
 // 全局方法挂载
