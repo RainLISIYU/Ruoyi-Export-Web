@@ -19,7 +19,7 @@ export function getInfo() {
 
 export function getUser() {
     return request({
-        url: url + '/dubbo/getUser',
+        url: url + '/dubbo/getUser/1',
         method: 'get',
     })
 }

@@ -31,17 +31,19 @@
       的文件
     </div>
 
-    <el-dialog
-      v-model="dialogVisible"
-      title="预览"
-      width="800px"
-      append-to-body
-    >
-      <img
-        :src="dialogImageUrl"
-        style="display: block; max-width: 100%; margin: 0 auto"
-      />
-    </el-dialog>
+    <el-image-viewer v-if="dialogVisible" :url-list="imageList" @close="() => dialogVisible = false" />
+
+<!--    <el-dialog-->
+<!--      v-model="dialogVisible"-->
+<!--      title="预览"-->
+<!--      width="800px"-->
+<!--      append-to-body-->
+<!--    >-->
+<!--      <img-->
+<!--        :src="dialogImageUrl"-->
+<!--        style="display: block; max-width: 100%; margin: 0 auto"-->
+<!--      />-->
+<!--    </el-dialog>-->
   </div>
 </template>
 
@@ -77,9 +79,10 @@ const emit = defineEmits();
 const number = ref(0);
 const uploadList = ref([]);
 const dialogImageUrl = ref("");
+const imageList = ref([]);
 const dialogVisible = ref(false);
 const baseUrl = import.meta.env.VITE_APP_BASE_API;
-const fileUrl = import.meta.env.VITE_APP_FILE_API;
+const fileUrl = import.meta.env.VITE_APP_BASE_API + '/file';
 const uploadImgUrl = ref(import.meta.env.VITE_APP_BASE_API + "/file/upload"); // 上传的图片服务器地址
 const headers = ref({ Authorization: "Bearer " + getToken() });
 const fileList = ref([]);
@@ -194,6 +197,7 @@ function handleUploadError() {
 // 预览
 function handlePictureCardPreview(file) {
   dialogImageUrl.value = file.url;
+  imageList.value = fileList.value.map(f => f.url)
   dialogVisible.value = true;
 }
 

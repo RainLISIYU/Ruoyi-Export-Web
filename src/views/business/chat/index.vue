@@ -8,6 +8,7 @@
       <el-button size="small" @click="chatRe(input)">文档检索</el-button>
       <el-button size="small" @click="chatForm('1')">格式化输出</el-button>
       <el-button size="small" @click="() => chatId = ''">新对话</el-button>
+      <el-button size="small" @click="() => shutFlag = false">中断对话</el-button>
     </el-form>
     <el-form>
       <el-form-item label="回答："/>
@@ -28,6 +29,7 @@ import mkl from 'markdown-it-latex'
 const input = ref('')
 const answer = ref('')
 const chatId = ref('')
+const shutFlag = ref(true)
 // markdown展示输出内容
 const md = new MarkdownIt()
 md.use(markdownItMathjax).use(mk, {
@@ -74,7 +76,7 @@ const streamChat1 = async () => {
     const stream = response.body
     const reader = stream.getReader()
     let buffer = ''
-    while (true) {
+    while (shutFlag.value) {
       const { done, value } = await reader.read()
       if (done) break
       buffer += decoder.decode(value, {stream: true})
@@ -84,12 +86,11 @@ const streamChat1 = async () => {
         const chunk = buffer.slice(0, boundaryIndex)
         buffer = buffer.slice(boundaryIndex + boundary.length)
         const data = chunk.replace(/^data:/gm, '').trim()
-        console.log(data)
         let json = JSON.parse(data)
         if (json) {
           chatId.value = json.chatId
           let text = json.data
-          answer.value = text.replace(/^\n?/gm, '').trim()
+          answer.value = text.replace('<think>', '思考开始：').replace('</think>', '思考结束。').replace(/^\n?/gm, '').trim()
         }
       }
     }

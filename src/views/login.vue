@@ -54,6 +54,8 @@
         </el-button>
         <div style="float: right;" v-if="register">
           <router-link class="link-type" :to="'/register'">立即注册</router-link>
+          <el-divider direction="vertical" />
+          <router-link class="link-type" :to="'/mongo'">游客访问</router-link>
         </div>
       </el-form-item>
     </el-form>
@@ -94,7 +96,7 @@ const loading = ref(false);
 // 验证码开关
 const captchaEnabled = ref(true);
 // 注册开关
-const register = ref(false);
+const register = ref(true);
 const redirect = ref(undefined);
 
 watch(route, (newRoute) => {
