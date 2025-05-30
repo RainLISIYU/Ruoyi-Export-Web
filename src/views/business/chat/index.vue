@@ -90,7 +90,7 @@ const streamChat1 = async () => {
         if (json) {
           chatId.value = json.chatId
           let text = json.data
-          answer.value = text.replace('<think>', '思考开始：').replace('</think>', '思考结束。').replace(/^\n?/gm, '').trim()
+          answer.value = text.replace('<think>', '思考开始：').replace('</think>', '思考结束。\r\n').replace(/^\n?/gm, '').trim()
         }
       }
     }
