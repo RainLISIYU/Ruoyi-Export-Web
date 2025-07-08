@@ -48,9 +48,23 @@ export const constantRoutes = [
     hidden: true
   },
   {
-    path: '/mongo',
+    path: '/mongo/:id',
     component: () => import('@/views/business/mongo/index'),
-    hidden: true
+    hidden: true,
+    children: [
+      {
+        path: 'test',
+        component: () => import('@/views/business/mongo/scriptTest'),
+        name: 'scriptTest',
+        meta: { transition: 'slide-left' },
+      },
+      {
+        path: 'home',
+        props: true,
+        component: () => import('@/views/business/mongo/home'),
+        meta: { transition: 'slide-right' }
+      }
+    ]
   },
   {
     path: "/:pathMatch(.*)*",

@@ -11,7 +11,8 @@ import usePermissionStore from '@/store/modules/permission'
 
 NProgress.configure({ showSpinner: false });
 
-const whiteList = ['/login', '/register'];
+const whiteListReg = [/\/login/, /\/register/, /\/mongo*/, /\/user*/];
+const whiteList = ['/login', '/register']
 
 router.beforeEach((to, from, next) => {
   NProgress.start()
@@ -19,9 +20,10 @@ router.beforeEach((to, from, next) => {
     to.meta.title && useSettingsStore().setTitle(to.meta.title)
     /* has token*/
     if (to.path === '/login') {
-      next({ path: '/' })
+      next({path: '/'})
       NProgress.done()
-    } else if (whiteList.indexOf(to.path) !== -1) {
+      } else if (whiteListReg.some(regPath => regPath.test(to.path))) {
+    // } else if (whiteList.indexOf(to.path) !== -1) {
       next()
     } else {
       if (useUserStore().roles.length === 0) {
@@ -50,7 +52,8 @@ router.beforeEach((to, from, next) => {
     }
   } else {
     // 没有token
-    if (whiteList.indexOf(to.path) !== -1) {
+    if (whiteListReg.some(path => path.test(to.path))) {
+    // if (whiteList.indexOf(to.path) !== -1) {
       // 在免登录白名单，直接进入
       next()
     } else {

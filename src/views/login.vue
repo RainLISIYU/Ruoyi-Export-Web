@@ -55,7 +55,7 @@
         <div style="float: right;" v-if="register">
           <router-link class="link-type" :to="'/register'">立即注册</router-link>
           <el-divider direction="vertical" />
-          <router-link class="link-type" :to="'/mongo'">游客访问</router-link>
+          <router-link class="link-type" :to="'/mongo/test'">游客访问</router-link>
         </div>
       </el-form-item>
     </el-form>

@@ -21,7 +21,7 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" icon="Search" @click="listMovies">搜索</el-button>
+            <el-button id="search-btn" type="primary" icon="Search" @click="listMovies">搜索</el-button>
             <el-button icon="Refresh" @click="resetQuery">重置</el-button>
           </el-form-item>
         </el-form>
@@ -111,7 +111,7 @@
       </template>
     </el-dialog>
   </el-container>
-
+  <router-view />
 </template>
 
 <script setup>
@@ -121,6 +121,7 @@ import ImageUpload from "@/components/ImageUpload/index.vue";
 import { saveMongo, getMovies, syncMovies } from "@/api/business/mongo.js";
 
 const visible = ref(false)
+const show = ref(true)
 const movie = reactive({
   id: '',
   title: '',
@@ -243,6 +244,10 @@ const resetQuery = () => {
   listMovies()
 }
 
+const random = (number) => {
+  return Math.floor(Math.random() * (number + 1))
+}
+
 const listMovies = () => {
   loading.value = true
   getMovies(movieParams)
@@ -256,6 +261,13 @@ const listMovies = () => {
         }
       })
 }
+
+onMounted(() => {
+  const searchBtn = document.querySelector('#search-btn')
+  searchBtn?.addEventListener('click', (event) => {
+    searchBtn.style.backgroundColor = `rgb(${random(255)}, ${random(255)}, ${random(255)})`
+  })
+})
 
 const disableDate = (date) => {
   return date.getTime() > Date.now()
@@ -287,5 +299,31 @@ const close = () => {
   border-radius: 4px;
   height: 20px;
   text-align: center;
+}
+
+.video-form {
+  border: 1px solid #dcdfe6;
+  width: 400px;
+  height: 300px;
+}
+
+.video-error-content {
+  margin-top: 100px;
+  text-align: center;
+  font-size: 20px;
+  color: red;
+}
+
+.fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+.fade-leave-active {
+  transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
 }
 </style>
