@@ -48,6 +48,25 @@ export const constantRoutes = [
     hidden: true
   },
   {
+    path: '/mongo/:id',
+    component: () => import('@/views/business/mongo/index'),
+    hidden: true,
+    children: [
+      {
+        path: 'test',
+        component: () => import('@/views/business/mongo/scriptTest'),
+        name: 'scriptTest',
+        meta: { transition: 'slide-left' },
+      },
+      {
+        path: 'home',
+        props: true,
+        component: () => import('@/views/business/mongo/home'),
+        meta: { transition: 'slide-right' }
+      }
+    ]
+  },
+  {
     path: "/:pathMatch(.*)*",
     component: () => import('@/views/error/404'),
     hidden: true
@@ -83,7 +102,7 @@ export const constantRoutes = [
         meta: { title: '个人中心', icon: 'user' }
       }
     ]
-  }
+  },
 ]
 
 // 动态路由，基于用户权限动态去加载
