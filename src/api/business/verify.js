@@ -13,3 +13,32 @@ export function getPage(query) {
         params: query
     })
 }
+
+export function delCertificate(ids) {
+    return request({
+        url: url + '?ids=' + ids,
+        method: 'delete',
+    })
+}
+
+export function getInfo(id) {
+    return request({
+        url: url + '/' + id,
+        method: 'get',
+    })
+}
+
+export function saveOrUpdate(data) {
+    return request({
+        url: url,
+        method: 'post',
+        data: data
+    })
+}
+
+export function genCertificate(data) {
+return request({
+        url: url + '/genCertificate?ids=' + data,
+        method: 'post',
+    })
+}
