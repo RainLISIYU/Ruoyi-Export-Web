@@ -35,6 +35,11 @@ export default defineConfig(({ mode, command }) => {
           target: 'http://127.0.0.1:8080',
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/dev-api/, '')
+        },
+        '/statics': {
+          target: 'http://127.0.0.1:8080',
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/statics/, '/file/statics')
         }
       }
     },

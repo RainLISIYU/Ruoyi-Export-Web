@@ -169,12 +169,16 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="温度" prop="temperature">
-              <el-input-number v-model="form.temperature" placeholder="请输入温度"/>
+              <el-input v-model="form.temperature" placeholder="请输入温度" >
+                <template #append>℃</template>
+              </el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="湿度" prop="humidity">
-              <el-input-number v-model="form.humidity" placeholder="请输入湿度" maxlength="64"/>
+              <el-input v-model="form.humidity" placeholder="请输入湿度" >
+                <template #append>%RH</template>
+              </el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -186,9 +190,26 @@
           </el-col>
         </el-row>
         <el-row>
+          <el-col :span="8">
+            <el-form-item label="批准人">
+              <ImageUpload v-model:model-value="form.approveMap" :limit="1" :is-multiple="false" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="核验员">
+              <ImageUpload v-model:model-value="form.checkMap" :limit="1" :is-multiple="false" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="检定员">
+              <ImageUpload v-model:model-value="form.verifyMap" :limit="1" :is-multiple="false" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
           <el-col :span="24">
             <el-form-item label="证书文件">
-              <el-input v-model="form.certificateUrl" />
+              <FileUpload v-model:model-value="form.certificateUrl" :limit="1" :is-show-del="delFlag" :is-show-tip="delFlag"/>
             </el-form-item>
           </el-col>
         </el-row>
@@ -239,6 +260,7 @@
           :limit="1"
           accept=".docx, .doc"
           :headers="temUpload.headers"
+          :fileType="temUpload.fileType"
           :action="temUpload.url"
           :disabled="temUpload.isUploading"
           :on-progress="handleTemUploadProgress"
@@ -269,6 +291,8 @@
 
 import { getToken } from "@/utils/auth";
 import { getPage, delCertificate, getInfo, saveOrUpdate, genCertificate, uploadTemplateUrl, importDataUrl } from '@/api/business/verify'
+import FileUpload from "@/components/FileUpload/index.vue"
+import ImageUpload from "@/components/ImageUpload/index.vue"
 
 const { proxy } = getCurrentInstance();
 const verifyList = ref([])
@@ -279,6 +303,8 @@ const loading = ref(false)
 const total = ref(0)
 const open = ref(false)
 const title = ref("")
+const delFlag = ref(false)
+
 /*** 导入参数 */
 const upload = reactive({
   // 是否显示弹出层（用户导入）
@@ -308,7 +334,9 @@ const temUpload = reactive({
   // 设置上传的请求头部
   headers: { Authorization: "Bearer " + getToken() },
   // 上传的地址
-  url: import.meta.env.VITE_APP_BASE_API + uploadTemplateUrl
+  url: import.meta.env.VITE_APP_BASE_API + uploadTemplateUrl,
+  // 文件类型
+  fileType: ["doc", "docx"]
 });
 
 const data = reactive({
@@ -363,6 +391,18 @@ function handleUpdate(row) {
     form.value = response.data
     title.value = "修改导入数据"
     open.value = true
+    if (response.data.approveUrl) {
+      form.value.approveMap = []
+      form.value.approveMap.push({ url: response.data.approveUrl })
+    }
+    if (response.data.checkUrl) {
+      form.value.checkMap = []
+      form.value.checkMap.push({ url: response.data.checkUrl })
+    }
+    if (response.data.verifyUrl) {
+      form.value.verifyMap = []
+      form.value.verifyMap.push({ url: response.data.verifyUrl })
+    }
   })
 }
 
@@ -420,6 +460,15 @@ function reset() {
     remark: undefined,
     // 证书路径
     certificateUrl: undefined,
+    // 批准人
+    approveUrl: undefined,
+    approveMap: [],
+    // 核验员
+    checkUrl: undefined,
+    checkMap: [],
+    // 检定员
+    verifyUrl: undefined,
+    verifyMap: [],
   }
   proxy.resetForm("verifyRef")
 }
@@ -467,7 +516,6 @@ const handleTemSuccess = (response, file, fileList) => {
   temUpload.isUploading = false
   proxy.$refs["temUploadRef"].handleRemove(file)
   proxy.$alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + response.msg + "</div>", "上传结果", { dangerouslyUseHTMLString: true })
-  console.log(response.data)
 }
 
 /** 提交上传文件 */
@@ -482,9 +530,19 @@ function submitTemForm() {
 
 /** 表单提交 */
 function submitForm() {
+  if (form.value.approveMap?.length > 0) {
+    form.value.approveUrl = form.value.approveMap[0].url
+  }
+  if (form.value.checkMap?.length > 0) {
+    form.value.checkUrl = form.value.checkMap[0].url
+  }
+  if (form.value.verifyMap?.length > 0) {
+    form.value.verifyUrl = form.value.verifyMap[0].url
+  }
   proxy.$refs["verifyRef"].validate(valid => {
     if (valid) {
       if (form.value.id !== undefined) {
+        form.value.updatedAt = null
         saveOrUpdate(form.value).then(response => {
           if (response.code === 200) {
             proxy.$modal.msgSuccess("修改成功")

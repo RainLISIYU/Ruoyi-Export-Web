@@ -16,7 +16,7 @@
       ref="fileUpload"
     >
       <!-- 上传按钮 -->
-      <el-button type="primary">选取文件</el-button>
+      <el-button v-if="showTip" type="primary">选取文件</el-button>
     </el-upload>
     <!-- 上传提示 -->
     <div class="el-upload__tip" v-if="showTip && fileList.length < limit">
@@ -28,11 +28,11 @@
     <!-- 文件列表 -->
     <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear" tag="ul">
       <li :key="file.uid" class="el-upload-list__item ele-upload-list__item-content" v-for="(file, index) in fileList">
-        <el-link :href="`${baseUrl}${file.url}`" :underline="false" target="_blank">
+        <el-link :href="`${file.url}`" :underline="false" target="_blank">
           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
         </el-link>
         <div class="ele-upload-list__item-content-action">
-          <el-link :underline="false" @click="handleDelete(index)" type="danger">删除</el-link>
+          <el-link v-if="isShowDel" :underline="false" @click="handleDelete(index)" type="danger">删除</el-link>
         </div>
       </li>
     </transition-group>
@@ -57,13 +57,23 @@ const props = defineProps({
   // 文件类型, 例如['png', 'jpg', 'jpeg']
   fileType: {
     type: Array,
-    default: () => ["doc", "xls", "ppt", "txt", "pdf"],
+    default: () => ["doc", "xls", "ppt", "txt", "pdf", "docx"],
   },
   // 是否显示提示
   isShowTip: {
     type: Boolean,
     default: true
-  }
+  },
+  // 是否显示删除
+  isShowDel: {
+    type: Boolean,
+    default: true
+  },
+  // 是否支持上传
+  needUpload: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const { proxy } = getCurrentInstance();
@@ -100,6 +110,7 @@ watch(() => props.modelValue, val => {
 
 // 上传前校检格式和大小
 function handleBeforeUpload(file) {
+  console.log(props.isShowDel + " " + props.needUpload + "  " + props.isShowTip)
   // 校检文件类型
   if (props.fileType.length) {
     const fileName = file.name.split('.');

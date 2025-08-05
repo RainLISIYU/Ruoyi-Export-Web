@@ -1,7 +1,7 @@
 <template>
   <div class="component-upload-image">
     <el-upload
-      multiple
+      :multiple="isMultiple"
       :action="uploadImgUrl"
       list-type="picture-card"
       :on-success="handleUploadSuccess"
@@ -16,6 +16,7 @@
       :file-list="fileList"
       :on-preview="handlePictureCardPreview"
       :class="{ hide: fileList.length >= limit }"
+      style="transition: none;"
     >
       <el-icon class="avatar-uploader-icon"><plus /></el-icon>
     </el-upload>
@@ -72,6 +73,11 @@ const props = defineProps({
     type: Boolean,
     default: true
   },
+  // 是否多选
+  isMultiple: {
+    type: Boolean,
+    default: true
+  }
 });
 
 const { proxy } = getCurrentInstance();
@@ -98,13 +104,13 @@ watch(() => props.modelValue, val => {
     fileList.value = list.map(item => {
       if (typeof item === "string") {
         if (item.indexOf(fileUrl) === -1) {
-          item = { name: fileUrl + item, url: fileUrl + item };
+          item = { name: item, url: item };
         } else {
           item = { name: item, url: item };
         }
       } else if (typeof item === "object") {
-        if (item.url.indexOf(fileUrl) === -1) {
-          item.url = fileUrl + item.url;
+        if (item.url?.indexOf(fileUrl) === -1) {
+          item.url = item.url;
         }
       }
       return item;
@@ -156,7 +162,10 @@ function handleExceed() {
 // 上传成功回调
 function handleUploadSuccess(res, file) {
   if (res.code === 200) {
-    uploadList.value.push({ name: res.data.name, url: fileUrl + res.data.url, id: res.data.id });
+    uploadList.value.push({ name: res.data.name, url: res.data.url, id: res.data.id });
+    console.log(res.data.url)
+    console.log(uploadList.value[0].url)
+    console.log(uploadList.value[0])
     uploadedSuccessfully();
   } else {
     number.value--;
@@ -217,7 +226,9 @@ function listToString(list, separator) {
 
 <style scoped lang="scss">
 // .el-upload--picture-card 控制加号部分
-.hide .el-upload--picture-card {
+.hide {
+  :deep(.el-upload--picture-card) {
     display: none;
+  }
 }
 </style>
